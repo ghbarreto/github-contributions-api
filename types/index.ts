@@ -4,3 +4,5 @@ export type GitInfo = {
     last_year_contribution: number;
     contributions: Contributions;
 };
+
+export type GitProfile = any;
