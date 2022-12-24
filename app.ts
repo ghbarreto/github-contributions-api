@@ -5,6 +5,11 @@ import type { Contributions, GitInfo, GitProfile } from './types';
 
 const express = require('express');
 const app = express();
+const cors = require('cors');
+
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(cors());
 
 app.get('/api/contributions', async (req, res) => {
     const git = new Parser();
@@ -40,7 +45,6 @@ app.get('/api/contributions', async (req, res) => {
             contributions,
         });
     });
-
     res.status(200).send(gitInfo[0]);
 });
 
@@ -73,7 +77,9 @@ app.get('/api/profile', async (req, res) => {
     res.status(200).send(gitProfile);
 });
 
-app.get('/api/contribution', async (req, res) => {
+app.post('/api/contribution/history', async (req, res) => {
+    const clicked_column = req.body.clicked_column;
+    const clicked_row = req.body.clicked_row;
     const browser = await puppeteer.launch({
         args: [`--window-size=1920,1080`],
         defaultViewport: {
@@ -88,9 +94,9 @@ app.get('/api/contribution', async (req, res) => {
     await page.waitForSelector('.js-calendar-graph-svg > g > g');
 
     const svg = await page.$$('.js-calendar-graph-svg > g > g');
-    const rect = await svg[2].$$('rect');
+    const rect = await svg[clicked_column].$$('rect');
 
-    await rect[6].click();
+    await rect[clicked_row].click();
 
     await page.waitForTimeout(2000);
 
@@ -100,7 +106,7 @@ app.get('/api/contribution', async (req, res) => {
     const inner_html = await (
         await (await (await page.$('.contribution-activity-listing')).getProperty('innerHTML')).jsonValue()
     ).trim();
-    console.log(inner_html);
+
     await browser.close();
 
     res.status(200).send({ inner_html });
