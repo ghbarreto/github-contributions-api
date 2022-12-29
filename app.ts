@@ -103,13 +103,34 @@ app.post('/api/contribution/history', async (req, res) => {
     await page.$('#js-contribution-activity');
     await page.screenshot({ path: 'screenshot.png' });
 
-    const inner_html = await (
-        await (await (await page.$('.contribution-activity-listing')).getProperty('innerHTML')).jsonValue()
-    ).trim();
+    let response = {};
+
+    const body_item = await page.evaluate(() =>
+        Array.from(document.getElementsByClassName('TimelineItem-body'), (e: any) => e.innerText)
+    );
+
+    body_item.forEach((body, i) => {
+        const body_item = body.split('\n');
+
+        // remove last item in array (the date)
+        body_item.pop();
+
+        body_item.forEach((item, index) => {
+            const is_header = item.match(/Created/g);
+
+            response = {
+                ...response,
+                [`body_${i}`]: {
+                    ...response[`body_${i}`],
+                    [`${is_header ? `header_${i}` : `item_${index}`}`]: item,
+                },
+            };
+        });
+    });
 
     await browser.close();
 
-    res.status(200).send({ inner_html });
+    res.status(200).send(response);
 });
 
 app.listen(3030, () => {
