@@ -30,10 +30,11 @@ app.get('/api/contributions', async (req, res) => {
 
             Array.from(rects).forEach((rect: SVGElement) => {
                 const date_contributed = rect.getAttribute('data-date');
-                const count_contributed = rect.getAttribute('data-count');
+                const count_contributed = rect.innerHTML.split('')[0];
+                const res = String(count_contributed) === 'N' ? 0 : Number(count_contributed);
 
                 return contributions.push({
-                    [date_contributed]: Number(count_contributed),
+                    [date_contributed]: res,
                 });
             });
 
